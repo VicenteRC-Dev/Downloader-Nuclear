@@ -1,5 +1,5 @@
 const http = require('http');
-const https = https = require('https');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
