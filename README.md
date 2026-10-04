@@ -1,188 +1,170 @@
-# ☢️ Nuclear-DW
+# 🎧 jam-logger
 
-### Gestor y proxy de descargas MCP para el reproductor **Nuclear** en Windows 10
+### Plugin + proxy de logs y descargas para el reproductor **Nuclear**
 
-![Windows 10](https://img.shields.io/badge/Windows-10-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-nativo-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-requerido-007808?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![npm](https://img.shields.io/badge/dependencias%20npm-0-blue?style=for-the-badge)
-![Versión](https://img.shields.io/badge/versión-0.1.0-orange?style=for-the-badge)
+![Versión](https://img.shields.io/badge/versión-0.2.0-orange?style=for-the-badge)
 
-> **Escucha música en Nuclear y llévatela en MP3 con carátula y etiquetas ID3, con un solo clic.**
+> **Escucha música en Nuclear, ve los logs en vivo y llévatela en MP3 con carátula y etiquetas ID3.**
+
+**Jam** actúa como intermediario: el proxy intercepta el tráfico, registra las peticiones y las entrega al plugin dentro de Nuclear.
 
 ---
 
 ## 📑 Contenido
 
 1. [Descripción general](#-descripción-general)
-2. [Requisitos previos](#️-requisitos-previos-en-windows-10)
+2. [Requisitos previos](#️-requisitos-previos)
 3. [Estructura del proyecto](#-estructura-del-proyecto)
 4. [Instalación del plugin para Nuclear](#-instalación-del-plugin-para-nuclear)
-5. [Ejecución del sistema](#️-ejecución-del-sistema-en-windows-10)
+5. [Ejecución del sistema](#️-ejecución-del-sistema)
 6. [Uso diario](#-uso-diario)
-7. [Notas importantes](#️-notas-importantes-para-windows-10)
+7. [Notas importantes](#️-notas-importantes)
 8. [Solución de problemas](#-solución-de-problemas)
-9. [Aviso legal y autoría](#-aviso-legal-y-autoría)
+9. [Aviso legal y autoría](#️-aviso-legal-y-autoría)
 
 ---
 
 ## 📖 Descripción general
 
-**Nuclear-DW** es un sistema integral diseñado para el reproductor musical **Nuclear** en **Windows 10**. Captura lo que escuchas y te permite convertirlo en archivos MP3 con carátula y metadatos. Se compone de tres módulos:
+**jam-logger** es un sistema para el reproductor **Nuclear**. Combina:
 
 | Módulo | Puerto | Función |
 |:--|:--:|:--|
-| 🌐 **Servidor Proxy HTTP** | `4120` | Intercepta y monitorea en segundo plano las peticiones del reproductor y del sistema MCP. |
-| 👁️ **Vigilante Autónomo** | — | Detecta automáticamente los cambios de canción, extrae metadatos y enlaces de streaming *en el aire* y los guarda en archivos **JSON** estructurados (sondeo cada **5 s**). |
-| 🖥️ **Servidor Web Gráfico** | `3000` | Interfaz en **Modo Oscuro** que muestra las canciones capturadas en tarjetas y permite descargarlas en **MP3**, uniendo audio, carátula y metadatos. |
+| 🌐 **Proxy (Jam intermediario)** | `4120` | Intercepta peticiones, guarda historial y expone `/__intercept/logs` y `/__intercept/clear` al plugin. |
+| 👁️ **Vigilante autónomo** | — | Detecta cambios de canción cada **5 s**, extrae metadatos y enlaces de streaming y guarda JSON. |
+| 🖥️ **Interfaz web** | `3000` | Modo oscuro: tarjetas de canciones y descarga MP3 (audio + carátula + ID3). |
+| 🔌 **Plugin Nuclear** | — | Panel en vivo de peticiones dentro de Nuclear (filtro, expandir body, copiar a Logs). |
 
 ### 🔄 Flujo de trabajo
 
 ```mermaid
 flowchart TD
-    A["🎵 Nuclear Player"] -->|peticiones JSON| B["🌐 Proxy HTTP<br/>Puerto 4120"]
-    B --> L[("capturas_200.txt<br/>historial del tráfico")]
-    B --> C["👁️ Vigilante Autónomo<br/>sondeo cada 5 s"]
-    C --> D[("songs_json/*.json<br/>metadatos + enlace de streaming")]
+    A["🎵 Nuclear Player"] -->|peticiones| B["🌐 Proxy jam-logger<br/>Puerto 4120"]
+    B --> L[("capturas_200.txt<br/>historial")]
+    B --> P["🔌 Plugin Jam Logger<br/>panel en vivo"]
+    B --> C["👁️ Vigilante<br/>sondeo cada 5 s"]
+    C --> D[("songs_json/*.json")]
     D --> E["🖥️ Interfaz Web<br/>Puerto 3000"]
-    E -->|Descargar MP3| F["🎬 FFmpeg<br/>audio + carátula + ID3"]
+    E -->|Descargar MP3| F["🎬 FFmpeg"]
     F --> G[("canciones_descargas/*.mp3")]
 ```
 
 ### ✨ Características
 
-- ✅ Intercepción de peticiones JSON en segundo plano.
-- ✅ Detección automática de cambios de canción, incluso cuando Nuclear pasa silenciosamente del videoclip al **«Audio Oficial»**.
-- ✅ Interfaz web en **Modo Oscuro** con una tarjeta por canción.
-- ✅ MP3 final con **carátula incrustada** y **etiquetas ID3** correctas.
-- ✅ Usa únicamente **módulos nativos de Node.js**: no requiere `npm install`.
+- ✅ Intercepción de peticiones con buffer en memoria + archivo de historial.
+- ✅ Endpoints `/__intercept/logs` y `/__intercept/clear` listos para el plugin.
+- ✅ Detección automática de cambios de canción (incluido el paso a «Audio Oficial»).
+- ✅ Interfaz web en modo oscuro con tarjetas.
+- ✅ MP3 final con carátula e ID3.
+- ✅ Solo módulos nativos de Node.js (sin `npm install`).
 
 ---
 
-## ⚙️ Requisitos previos en Windows 10
-
-Para que la "magia" de descargar e incrustar carátulas funcione, necesitas tener instaladas estas dos herramientas:
+## ⚙️ Requisitos previos
 
 | Herramienta | Para qué sirve | Dónde obtenerla |
 |:--|:--|:--|
-| **Node.js** | Ejecutar el servidor | [nodejs.org](https://nodejs.org/) |
-| **FFmpeg** | Crear el MP3 con carátula y etiquetas | Se instala con `winget` (ver abajo) |
+| **Node.js** | Ejecutar el proxy y la UI | [nodejs.org](https://nodejs.org/) |
+| **FFmpeg** | Crear el MP3 con carátula y etiquetas | `winget install ffmpeg` (o `Gyan.FFmpeg`) |
 
-### 🛠️ ¿Cómo instalar FFmpeg en Windows 10?
+Verifica en una terminal nueva:
 
-1. Abre **PowerShell como Administrador**: clic derecho en el botón de Inicio y elige **«Windows PowerShell (Administrador)»**.
-2. Ejecuta el siguiente comando:
-
-   ```powershell
-   winget install ffmpeg
-   ```
-
-3. Si te pide aceptar términos o reiniciar la terminal, hazlo: así FFmpeg queda agregado automáticamente a las variables de entorno **PATH** de Windows 10.
-4. Verifica que todo quedó listo en una terminal nueva:
-
-   ```cmd
-   node -v
-   ffmpeg -version
-   ```
-
-> [!TIP]
-> Si `winget` no encuentra el paquete con ese nombre, prueba con el identificador completo: `winget install Gyan.FFmpeg`
+```cmd
+node -v
+ffmpeg -version
+```
 
 ---
 
 ## 📁 Estructura del proyecto
 
-Al ejecutar el script por primera vez, el programa crea automáticamente su entorno de trabajo dentro de tu carpeta:
-
 ```text
-Tu-Carpeta-Del-Proyecto/
-├── server.js               # Script principal: Proxy + Servidor Web
-├── capturas_200.txt        # Historial (logs) de todo el tráfico JSON capturado
-├── songs_json/             # 📂 Se genera solo: los JSON de cada canción
-└── canciones_descargas/    # 📂 Se genera solo: tus MP3 listos
+jam-logger/
+├── package.json          # Manifest del plugin Nuclear
+├── plugin.js             # Código del plugin (panel en vivo)
+├── proxy.js              # Proxy + vigilante + interfaz web
+├── LICENSE
+├── README.md
+├── capturas_200.txt      # Se genera al usar (historial)
+├── songs_json/           # Se genera: JSON por canción
+└── canciones_descargas/  # Se genera: MP3 listos
 ```
 
 ---
 
 ## 🔌 Instalación del plugin para Nuclear
 
-Si vas a cargar el visualizador MCP dentro del propio Nuclear, crea una **carpeta dedicada** para el plugin (por ejemplo, en Documentos o en el Escritorio) con esta estructura:
+1. Crea una carpeta (por ejemplo `jam-logger-plugin/`) con:
+   - `package.json`
+   - `plugin.js`
+2. En Nuclear: carga el plugin desde esa carpeta (Plugin store / plugins locales según tu versión).
+3. Activa **Jam Logger** y, si quieres, configura:
+   - **URL del proxy**: `http://127.0.0.1:4120`
+   - **Intervalo de consulta**: 1000 ms
+   - **Copiar al visor de logs**: sí/no
 
-```text
-Nuclear-DW-Plugin/
-├── package.json
-└── plugin.js
-
-```
-
-### 1️⃣ Archivo `package.json`
-
-Define la información del plugin y vincula tu imagen local mediante `icon.link`.
-
-```json
-{
-  "name": "Nuclear-DW",
-  "version": "0.1.0",
-  "description": "Interceptación de peticiones de logs de MCP y envío a un servidor externo. (descargar canciones)",
-  "author": "VicenteRC-Dev",
-  "main": "plugin.js",
-  "nuclear": {
-    "displayName": "MCP Logs",
-  "icon": {
-    "type": "link",
-    "link": "https://marketplace.canva.com/xHPJk/MAHA8XxHPJk/1/tl/canva-MAHA8XxHPJk.jpg"
-    }
-  }
-}
-```
-
-### 2️⃣ Archivo `plugin.js`
-
-Aquí va todo el código **React** que utilizas en Nuclear para visualizar el panel MCP en vivo (el cuadro con los logs de las peticiones).
 ---
 
-## ▶️ Ejecución del sistema en Windows 10
+## ▶️ Ejecución del sistema
 
-El script utiliza **únicamente módulos nativos de Node.js**, por lo que no necesitas instalar librerías adicionales con `npm`.
-
-1. Abre **PowerShell** o el **Símbolo del sistema (CMD)** en Windows 10.
-2. Navega hasta la carpeta raíz de tu proyecto con el comando `cd`:
+1. Abre PowerShell o CMD en la carpeta del proyecto:
 
    ```cmd
-   cd C:\Users\TuUsuario\CarpetaDelProyecto
+   cd ruta\a\jam-logger
    ```
 
-3. Ejecuta el servidor con Node.js:
+2. Arranca el proxy:
 
    ```cmd
    node proxy.js
    ```
 
-En la consola verás que el sistema enciende de inmediato:
+Verás algo como:
 
-- 🟢 **Proxy de intercepción** → puerto `4120`
-- 🟢 **Vigilante Autónomo** → sondeo cada `5 s`
-- 🟢 **Interfaz Gráfica Web** → puerto `3000`
+```text
+🚀 jam-logger proxy activo
+   Interceptación : http://127.0.0.1:4120
+   Destino        : http://127.0.0.1:8800
+   Logs plugin    : GET  /__intercept/logs?since=N
+                   POST /__intercept/clear
+🖥️  Interfaz gráfica  : http://127.0.0.1:3000
+```
+
+Variables de entorno opcionales:
+
+| Variable | Default | Descripción |
+|:--|:--|:--|
+| `LISTEN_PORT` | `4120` | Puerto del proxy |
+| `TARGET_HOST` | `127.0.0.1` | Host al que se reenvía |
+| `TARGET_PORT` | `8800` | Puerto destino (MCP de Nuclear) |
+| `UI_PORT` | `3000` | Puerto de la interfaz web |
 
 ---
 
 ## 🎧 Uso diario
 
-1. 🌍 Abre tu navegador habitual (Google Chrome, Edge o Firefox) y entra a: **http://127.0.0.1:3000**
-2. 🎵 Abre **Nuclear** y escucha música con normalidad.
-3. 🔄 Cada vez que escuches o cambies de canción (incluso si Nuclear cambia silenciosamente del videoclip al **«Audio Oficial»**), el Vigilante lo detecta y crea un archivo `.json` en la carpeta `songs_json/`.
-4. ✨ La interfaz web del puerto `3000` se actualiza sola y muestra la tarjeta de la canción con su carátula y su título.
-5. ⬇️ Haz clic en **«Descargar MP3»**. El servidor descarga el stream de audio y la imagen, los une con **FFmpeg**, agrega las etiquetas **ID3** correctas y deja el MP3 listo en `canciones_descargas/`.
+1. Abre el navegador en **http://127.0.0.1:3000**.
+2. Abre **Nuclear** y reproduce música con normalidad.
+3. El vigilante crea un `.json` en `songs_json/` al detectar canción nueva.
+4. La interfaz se actualiza sola; pulsa **Descargar MP3**.
+5. Dentro de Nuclear, el panel **Jam Logger** muestra las peticiones en vivo (si el proxy está corriendo).
 
 ---
 
-## ⚠️ Notas importantes para Windows 10
+## ⚠️ Notas importantes
 
 > [!WARNING]
-> **Caducidad de enlaces.** Los enlaces de streaming de la CDN (servidores de Google/YouTube) expiran por seguridad. Descarga las canciones desde la interfaz web **poco después de reproducirlas**: si pasan horas, el enlace caducará y la descarga fallará.
+> **Caducidad de enlaces.** Los streams de CDN caducan. Descarga poco después de reproducir.
 
 > [!IMPORTANT]
-> **Puertos ocupados.** Asegúrate de que los puertos `4120` y `3000` no estén siendo usados por otro software o instancia en tu Windows 10 antes de iniciar el script.
+> **Puertos libres.** Comprueba que `4120` y `3000` no estén ocupados.
+
+> [!NOTE]
+> El proxy reenvía por defecto a `127.0.0.1:8800` (MCP de Nuclear). Si tu instancia usa otro puerto, define `TARGET_PORT`.
 
 ---
 
@@ -190,19 +172,20 @@ En la consola verás que el sistema enciende de inmediato:
 
 | Síntoma | Causa probable | Solución |
 |:--|:--|:--|
-| `'ffmpeg' no se reconoce...` | FFmpeg no está en el PATH | Reinicia la terminal o reinstálalo; verifica con `ffmpeg -version`. |
-| Error al iniciar: puerto en uso | El `4120` o el `3000` están ocupados | Cierra la otra instancia o libera el puerto (ver abajo). |
-| La descarga falla | El enlace de streaming caducó | Vuelve a reproducir la canción y descárgala enseguida. |
-| No aparecen tarjetas | Aún no se detecta ninguna canción | Reproduce una en Nuclear, espera unos segundos y revisa `songs_json/`. |
+| `'ffmpeg' no se reconoce...` | FFmpeg no está en el PATH | Reinicia la terminal o reinstala; verifica con `ffmpeg -version`. |
+| Error al iniciar: puerto en uso | 4120 o 3000 ocupados | Cierra la otra instancia o libera el puerto. |
+| La descarga falla | Enlace de streaming caducado | Vuelve a reproducir y descarga enseguida. |
+| No aparecen tarjetas | Aún no hay canciones detectadas | Reproduce en Nuclear, espera y revisa `songs_json/`. |
+| Plugin: «No se pudo consultar el proxy» | Proxy apagado o URL incorrecta | Arranca `node proxy.js` y revisa la URL en ajustes del plugin. |
 
-### 🔓 Liberar un puerto ocupado
+### Liberar un puerto ocupado (Windows)
 
 ```cmd
 netstat -ano | findstr :3000
 taskkill /PID <PID> /F
 ```
 
-Cambia `:3000` por `:4120` si el conflicto es con el proxy, y reemplaza `<PID>` por el número de la última columna del primer comando.
+Cambia `:3000` por `:4120` si hace falta.
 
 ---
 
@@ -211,8 +194,9 @@ Cambia `:3000` por `:4120` si el conflicto es con el proxy, y reemplaza `<PID>` 
 Proyecto de **uso personal y educativo**. Descarga únicamente contenido que tengas derecho a guardar y respeta los derechos de autor y los términos de servicio de las plataformas involucradas.
 
 - 👤 **Autor:** VicenteRC-Dev
-- 📄 **Licencia:** *MIT*
+- 📄 **Licencia:** MIT
+- 🔗 Repositorio original (legado): [Downloader-Nuclear](https://github.com/VicenteRC-Dev/Downloader-Nuclear)
 
 ---
 
-<p align="center"><b>Nuclear-DW</b> · v0.1.0 · Hecho con ☕ por VicenteRC-Dev</p>
+<p align="center"><b>jam-logger</b> · v0.2.0 · Hecho con ☕ por VicenteRC-Dev</p>
