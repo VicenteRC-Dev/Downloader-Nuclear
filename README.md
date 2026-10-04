@@ -62,6 +62,26 @@ flowchart TD
 - ✅ MP3 final con carátula e ID3.
 - ✅ Solo módulos nativos de Node.js (sin `npm install`).
 
+
+## 🔰 Mejoras
+
+
+V0.10.0
+ 
+- Creación del repositorio y todo es netamente por aburrimiento y fue a pedido de un amigo
+ 
+- interceptación mediante método "jam" para desglosar json que contiene texto importante para extraer y descargar
+ 
+- archivo plugin es básicamente lo mismo que el proxy.js pero mas lindo
+
+V0.20.0
+ 
+- reproductor de musica web, estilo dark + diseño de botones + separación por album (en desarrollo)
+ 
+- Descargas directamente desde navegador y dispositivos (IP expuesta para ingresar desde cualquier dispositivo)
+ 
+- le puse un icono de gato al html xd
+
 ---
 
 ## ⚙️ Requisitos previos
@@ -198,5 +218,6 @@ Proyecto de **uso personal y educativo**. Descarga únicamente contenido que ten
 - 🔗 Repositorio original (legado): [Downloader-Nuclear](https://github.com/VicenteRC-Dev/Downloader-Nuclear)
 
 ---
+
 
 <p align="center"><b>jam-logger</b> · v0.2.0 · Hecho con ☕ por VicenteRC-Dev</p>
