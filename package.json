@@ -1,11 +1,11 @@
 {
   "name": "jam-logger",
   "version": "0.2.0",
-  "description": "Plugin y proxy para Nuclear: intercepta logs/peticiones MCP (vía Jam como intermediario) y permite capturar/descargar canciones en MP3 con carátula e ID3.",
+  "description": "Plugin y proxy para Nuclear: intercepta logs/peticiones utilizando método JAM de nuclear.",
   "author": "VicenteRC-Dev",
   "main": "plugin.js",
   "license": "MIT",
-  "keywords": ["nuclear", "plugin", "mcp", "logger", "jam", "music", "downloader"],
+  "keywords": ["nuclear", "plugin", "logger", "jam", "music", "downloader"],
   "nuclear": {
     "displayName": "Jam Logger",
     "icon": {
