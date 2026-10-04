@@ -1,5 +1,5 @@
-const CATEGORY = 'MCP Logs';
-const WIDGET_ID = 'mcp-logs';
+const CATEGORY = 'Jam Logger';
+const WIDGET_ID = 'jam-logger';
 const MAX_LOCAL = 300; // entradas que se conservan en el panel
 const MAX_LINE = 300; // largo máximo de cada línea copiada al visor de logs
 
@@ -39,11 +39,10 @@ function lineFor(e) {
   const parts = [`#${e.id}`, arrowFor(e.dir)];
   if (e.method) parts.push(e.method);
   if (e.status) parts.push(String(e.status));
-  
-  // Mejorar la visualización del resumen para logs más útiles
+
   const summaryText = e.summary || e.url || '';
   parts.push(summaryText);
-  
+
   const line = parts.join(' ');
   return line.length > MAX_LINE ? line.slice(0, MAX_LINE) + '…' : line;
 }
@@ -59,7 +58,7 @@ async function poll() {
     if (store.error) {
       store.error = '';
       lastErrorShown = '';
-      apiRef.Logger.info(`Conectado con el proxy en ${base}`);
+      apiRef.Logger.info(`Conectado con el proxy jam-logger en ${base}`);
       notify();
     }
 
@@ -154,11 +153,10 @@ function LogsWidget() {
 
   const colors = { request: '#4fc3f7', response: '#81c784', sse: '#ffd54f', error: '#e57373' };
   const needle = filter.trim().toLowerCase();
-  
-  // Búsqueda más robusta
+
   const visible = needle
     ? store.entries.filter((e) => {
-        const searchText = `${e.method||''} ${e.status||''} ${e.summary || ''} ${e.url || ''} ${e.body || ''}`.toLowerCase();
+        const searchText = `${e.method || ''} ${e.status || ''} ${e.summary || ''} ${e.url || ''} ${e.body || ''}`.toLowerCase();
         return searchText.includes(needle);
       })
     : store.entries;
@@ -202,17 +200,42 @@ function LogsWidget() {
         placeholder: '🔍 Filtrar peticiones por texto, código de estado, url...',
         onChange: (ev) => setFilter(ev.target.value),
         style: { ...controlStyle, flex: 1, transition: 'all 0.2s' },
-        onFocus: (e) => e.target.style.borderColor = '#4fc3f7',
-        onBlur: (e) => e.target.style.borderColor = 'rgba(255,255,255,0.2)'
+        onFocus: (e) => (e.target.style.borderColor = '#4fc3f7'),
+        onBlur: (e) => (e.target.style.borderColor = 'rgba(255,255,255,0.2)')
       }),
-      h('button', { 
-        onClick: clearAll, 
-        style: { ...controlStyle, cursor: 'pointer', background: 'rgba(229, 115, 115, 0.1)', borderColor: 'rgba(229, 115, 115, 0.4)', color: '#e57373' },
-        onMouseOver: (e) => e.target.style.background = 'rgba(229, 115, 115, 0.2)',
-        onMouseOut: (e) => e.target.style.background = 'rgba(229, 115, 115, 0.1)'
-      }, '🗑️ Limpiar')
+      h(
+        'button',
+        {
+          onClick: clearAll,
+          style: {
+            ...controlStyle,
+            cursor: 'pointer',
+            background: 'rgba(229, 115, 115, 0.1)',
+            borderColor: 'rgba(229, 115, 115, 0.4)',
+            color: '#e57373'
+          },
+          onMouseOver: (e) => (e.target.style.background = 'rgba(229, 115, 115, 0.2)'),
+          onMouseOut: (e) => (e.target.style.background = 'rgba(229, 115, 115, 0.1)')
+        },
+        '🗑️ Limpiar'
+      )
     ),
-    store.error ? h('div', { style: { color: '#e57373', fontSize: 13, marginBottom: 10, padding: '8px', background: 'rgba(229, 115, 115, 0.1)', borderRadius: '4px' } }, `⚠️ ${store.error}`) : null,
+    store.error
+      ? h(
+          'div',
+          {
+            style: {
+              color: '#e57373',
+              fontSize: 13,
+              marginBottom: 10,
+              padding: '8px',
+              background: 'rgba(229, 115, 115, 0.1)',
+              borderRadius: '4px'
+            }
+          },
+          `⚠️ ${store.error}`
+        )
+      : null,
     h(
       'div',
       {
@@ -227,9 +250,15 @@ function LogsWidget() {
           fontSize: 12,
           lineHeight: 1.5,
           border: '1px solid rgba(255,255,255,0.1)'
-        },
+        }
       },
-      rows.length ? rows : h('div', { style: { opacity: 0.5, textAlign: 'center', marginTop: '20px', fontSize: '14px' } }, '⏳ Esperando peticiones JSON(200)...')
+      rows.length
+        ? rows
+        : h(
+            'div',
+            { style: { opacity: 0.5, textAlign: 'center', marginTop: '20px', fontSize: '14px' } },
+            '⏳ Esperando peticiones (Jam Logger)...'
+          )
     )
   );
 }
@@ -237,7 +266,7 @@ function LogsWidget() {
 // ---- Ciclo de vida del plugin ----
 module.exports = {
   async onLoad(api) {
-    api.Logger.info('Plugin MCP Logs cargado');
+    api.Logger.info('Plugin Jam Logger cargado');
   },
 
   async onEnable(api) {
@@ -246,13 +275,13 @@ module.exports = {
     const definitions = [
       {
         id: 'proxyUrl',
-        title: 'URL del proxy mcp-intercept',
-        description: 'Dirección donde corre el servidor de intercepción.',
+        title: 'URL del proxy jam-logger',
+        description: 'Dirección donde corre el servidor de intercepción (Jam como intermediario).',
         category: CATEGORY,
         kind: 'string',
         default: 'http://127.0.0.1:4120',
         format: 'url',
-        widget: { type: 'text', placeholder: 'http://127.0.0.1:4120' },
+        widget: { type: 'text', placeholder: 'http://127.0.0.1:4120' }
       },
       {
         id: 'pollMs',
@@ -265,7 +294,7 @@ module.exports = {
         max: 10000,
         step: 250,
         unit: 'ms',
-        widget: { type: 'number-input', min: 250, max: 10000, step: 250, unit: 'ms' },
+        widget: { type: 'number-input', min: 250, max: 10000, step: 250, unit: 'ms' }
       },
       {
         id: 'mirror',
@@ -274,19 +303,19 @@ module.exports = {
         category: CATEGORY,
         kind: 'boolean',
         default: true,
-        widget: { type: 'toggle' },
-      },
+        widget: { type: 'toggle' }
+      }
     ];
 
     if (React) {
       api.Settings.registerWidget(WIDGET_ID, LogsWidget);
       definitions.push({
         id: 'panel',
-        title: 'Peticiones MCP en vivo',
+        title: 'Peticiones en vivo (Jam Logger)',
         description: 'Filtra y revisa los JSON capturados. Clic en una línea para expandir.',
         category: CATEGORY,
         kind: 'custom',
-        widgetId: WIDGET_ID,
+        widgetId: WIDGET_ID
       });
     } else {
       api.Logger.warn('React no está disponible: el panel en vivo se desactiva.');
@@ -296,16 +325,16 @@ module.exports = {
     lastSeq = 0;
     store.entries = [];
     start();
-    api.Logger.info('Plugin activado correctamente');
+    api.Logger.info('Plugin Jam Logger activado correctamente');
   },
 
   async onDisable(api) {
     stop();
     if (React) api.Settings.unregisterWidget(WIDGET_ID);
-    api.Logger.info('Plugin desactivado');
+    api.Logger.info('Plugin Jam Logger desactivado');
   },
 
   async onUnload() {
     stop();
-  },
+  }
 };

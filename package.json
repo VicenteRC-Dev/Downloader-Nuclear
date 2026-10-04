@@ -1,14 +1,16 @@
 {
-  "name": "Nuclear-DW",
-  "version": "0.1.0",
-  "description": "Interceptación de peticiones de logs de MCP y envío a un servidor externo. (descargar canciones)",
+  "name": "jam-logger",
+  "version": "0.2.0",
+  "description": "Plugin y proxy para Nuclear: intercepta logs/peticiones MCP (vía Jam como intermediario) y permite capturar/descargar canciones en MP3 con carátula e ID3.",
   "author": "VicenteRC-Dev",
   "main": "plugin.js",
+  "license": "MIT",
+  "keywords": ["nuclear", "plugin", "mcp", "logger", "jam", "music", "downloader"],
   "nuclear": {
-    "displayName": "MCP Logs",
-  "icon": {
-    "type": "link",
-    "link": "https://marketplace.canva.com/xHPJk/MAHA8XxHPJk/1/tl/canva-MAHA8XxHPJk.jpg"
-}
+    "displayName": "Jam Logger",
+    "icon": {
+      "type": "link",
+      "link": "https://marketplace.canva.com/xHPJk/MAHA8XxHPJk/1/tl/canva-MAHA8XxHPJk.jpg"
+    }
   }
 }
