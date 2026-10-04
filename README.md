@@ -66,7 +66,7 @@ flowchart TD
 ## 🔰 Mejoras
 
 
-V0.10.0
+V0.1.0
  
 - Creación del repositorio y todo es netamente por aburrimiento y fue a pedido de un amigo
  
@@ -74,7 +74,7 @@ V0.10.0
  
 - archivo plugin es básicamente lo mismo que el proxy.js pero mas lindo
 
-V0.20.0
+V0.2.0
  
 - reproductor de musica web, estilo dark + diseño de botones + separación por album (en desarrollo)
  
