@@ -220,6 +220,10 @@ Ejemplo de JSON en `songs_json/`:
 | Descarga en curso | Botón **✕** cancela (HTTP + FFmpeg) |
 
 ---
+## Imagen de WEB & proxy
+<img width="1920" height="966" alt="aaaa" src="https://github.com/user-attachments/assets/757af717-2d55-4fc4-84cb-44018b6406ac" />
+
+---
 
 ## Interfaz web
 
